@@ -1,7 +1,8 @@
-import { Client, Lobby } from 'boardgame.io/react';
+import { Client } from 'boardgame.io/react';
 import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
 import { Game } from './Game';
 import { Board } from './Board';
+import Lobby from './Lobby';
 
 const SinglePlayerClient = Client(
   {
@@ -27,13 +28,7 @@ const App = () => <Router>
       <SinglePlayerClient />
     </Route>
     <Route path='/lobby'>
-      <Lobby
-        gameServer={`http://${window.location.hostname}:8000`}
-        lobbyServer={`http://${window.location.hostname}:8000`}
-        gameComponents={[
-          { game: Game, board: Board }
-        ]}
-      />;
+      <Lobby />;
     </Route>
   </Switch>
 </Router>

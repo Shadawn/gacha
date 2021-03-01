@@ -35,10 +35,10 @@ descriptionGenerators.Youmu__CloneDamage = (character, skill, effect) => {
   return `deals extra ${valueRender(character, effect)} extra damage if Youmu has summoned "Wheel of Pain of the Living and Dead"`
 }
 descriptionGenerators.Youmu__CreateClone = (character, skill, effect) => {
-  return `summons spirit clone with ${valueRender(character, effect)} hp. While clone persists, Transmigration Slash deals extra damage.`
+  return `summons spirit clone with ${valueRender(character, effect)} hp. While clone persists Transmigration Slash deals extra damage.`
 }
 descriptionGenerators.Youmu__ApplyDelayedDamage = (character, skill, effect) => {
-  return `after ${effect.params.delay} seconds, deals ${valueRender(character, effect)} damage to the target (may change based on the current attack).`
+  return `after ${effect.params.delay} seconds deals ${valueRender(character, effect)} damage to the target (may change based on the current attack).`
 }
 descriptionGenerators.Youmu__DelayedDamage = (character, condition, effect) => {
   return `${valueRender(character, effect)} damage`
