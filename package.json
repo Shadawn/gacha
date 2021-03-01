@@ -17,7 +17,7 @@
     "web-vitals": "^0.2.4"
   },
   "scripts": {
-    "start": "node -r server.js",
+    "start": "node -r esm server.js",
     "start-local": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

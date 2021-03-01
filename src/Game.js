@@ -189,4 +189,3 @@ function winner(G) {
   else return null //draw.
 }
 
-
