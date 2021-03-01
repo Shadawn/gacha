@@ -1,7 +1,7 @@
 import { Server } from 'boardgame.io/server';
 import path from 'path';
 import serve from 'koa-static';
-import { Game } from './src/game';
+import { Game } from './src/Game';
 
 const server = Server({ games: [Game] });
 const PORT = process.env.PORT || 8000;
