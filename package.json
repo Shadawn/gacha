@@ -18,6 +18,7 @@
   },
   "scripts": {
     "start": "node -r esm server.js",
+    "start-localserver": "react-scripts build & node -r esm server.js",
     "start-local": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

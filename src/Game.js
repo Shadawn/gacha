@@ -113,6 +113,7 @@ function getNextEventData(G) {
     time: Number.POSITIVE_INFINITY
   });
   const nextConditionChangeData = G.conditions.reduce((nextConditionChangeData, condition, index) => {
+    if (condition === undefined || condition === null) return nextConditionChangeData;
     if (condition.time === false) return nextConditionChangeData;
     const timeUntilConditionChange = condition.time - G.time;
     if (nextConditionChangeData.time <= timeUntilConditionChange) return nextConditionChangeData;
@@ -160,6 +161,7 @@ function recalculateCurrentStats(G) {
     character.current.active = character.current.alive;
   })
   G.conditions.forEach(condition => {
+    if (condition === undefined || condition === null) return;
     const character = G.characters[condition.characterID];
     condition.effects.forEach(effect => {
       if (effect.type !== 'statsCalculation') return;

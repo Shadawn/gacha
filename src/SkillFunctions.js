@@ -154,6 +154,7 @@ function dealDamage(G, caster, target, damage) {
   takeDamage(G, target, eventParams)
   caster.current.conditions.forEach(conditionID => {
     const condition = G.conditions[conditionID];
+    if (condition === undefined || condition === null) return;
     condition.effects.forEach(effect => {
       if (effect.type !== 'damageDealt') return;
       const skillFunction = SkillFunctions[effect.name];
@@ -166,6 +167,7 @@ function dealDamage(G, caster, target, damage) {
 function takeDamage(G, character, eventParams) {
   character.current.conditions.forEach(conditionID => {
     const condition = G.conditions[conditionID];
+    if (condition === undefined || condition === null) return;
     condition.effects.forEach(effect => {
       if (effect.type !== 'damageTaken') return;
       const skillFunction = SkillFunctions[effect.name];
@@ -190,7 +192,8 @@ function death(G, character) {
   character.current.active = false;
   character.current.alive = false;
   G.conditions.forEach((condition, index) => {
-    if (condition.characterID === character.index) delete G.conditions[index];
+    if (condition === undefined || condition === null) return;
+    if (condition.characterID === character.current.ID) removeCondition(G, condition);
   })
 }
 

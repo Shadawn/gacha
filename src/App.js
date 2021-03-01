@@ -12,22 +12,28 @@ const SinglePlayerClient = Client(
   }
 )
 
+const NavItem = (props) => {
+  return <div style={{
+    paddingRight: '5px',
+    paddingLeft: '5px',
+    display: 'inline'
+  }}><Link to={props.to}>{props.label}</Link></div>
+}
 const App = () => <Router>
   <nav>
-    <ul>
-      <li>
-        <Link to='/singleplayer'>Single-player</Link>
-      </li>
-      <li>
-        <Link to='/lobby'>Multiplayer</Link>
-      </li>
-    </ul>
+    <NavItem to='/singleplayer' label='Single-player' />
+    <NavItem to='/lobby' label='Multiplayer' />
+    <NavItem to='/debug' label='Debug' />
   </nav>
   <Switch>
     <Route path='/singleplayer'>
       <SinglePlayerClient />
     </Route>
     <Route path='/lobby'>
+      <Lobby />;
+    </Route>
+    <Route path='/debug'>
+      <Lobby />;
       <Lobby />;
     </Route>
   </Switch>

@@ -130,7 +130,6 @@ function renderTeam(board, teamID) {
               })
               effectsDescriptionArray.splice(0, 0, condition.time === false ? undefined : `${Math.round(condition.time - G.time)} s`)
               const effectsDescription = effectsDescriptionArray.filter(description => {
-                console.log(description);
                 return description !== undefined
               }).join(', ');
               return `${condition.name}${effectsDescription !== '' ? ' (' + effectsDescription + ')' : ''}`

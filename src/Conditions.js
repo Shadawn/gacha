@@ -39,5 +39,6 @@ export function removeCondition(G, condition) {
     skillFunction(G, character, condition, effect, eventParams);
   })
   character.current.conditions.splice(character.current.conditions.indexOf(condition.ID), 1);
-  delete G.conditions[condition.ID];
+  //delete G.conditions[condition.ID];
+  G.conditions[condition.ID] = undefined;
 }
