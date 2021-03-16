@@ -1,5 +1,5 @@
 import React from 'react';
-import { skillDamage, skillDuration, skillValue, isAvailableTarget } from './SkillFunctions.js';
+import { skillDuration, skillValue, isAvailableTarget } from './SkillFunctions.js';
 
 function valueRender(character, effect) {
   return `${Math.round(skillValue(character, effect.params))} (${effect.params.scaling * 100}% of Atk${effect.params.boostscaling > 0 ? `, + ${effect.params.boostscaling * 100}% per boost` : ''})`
@@ -58,12 +58,22 @@ descriptionGenerators.ApplyStun = (character, skill, effect) => {
 descriptionGenerators.ExecuteTarget = (character, skill, effect) => {
   return `instantly kills ${targetRender(skill)} if it is below ${valueRender(character, effect)} hp`
 }
+descriptionGenerators.HealTarget = (character, skill, effect) => {
+  return `heals ${targetRender(skill)} for ${valueRender(character, effect)} hp`
+}
+descriptionGenerators.Erula__ApplyPoison = (character, skill, effect) => {
+  return `applies poison to ${targetRender(skill)} dealing 5% of it's health after each of it's turns`
+}
+descriptionGenerators.Erula__Cleanse = (character, skill, effect) => {
+  return `removes most negative status effects from ${targetRender(skill)}`
+}
 
 export class Board extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      skillID: undefined
+      skillID: undefined,
+      carouselActiveCharacterID: undefined
     };
   }
 
@@ -72,10 +82,45 @@ export class Board extends React.Component {
       <p>{this.props.ctx.gameover.winner !== undefined ? `Player ${this.props.ctx.gameover.winner + 1} wins!` : `Draw!`}</p>
     </div>
     return <div>
+      <CharacterCarousel board={this} />
       <PlayerBoard board={this} playerID={'0'} />
       {/*<PlayerBoard board={this} playerID={'1'} />*/}
     </div>
   }
+}
+
+function selectCharacterCarousel(board, characterID) {
+  board.setState({
+    carouselActiveCharacterID: characterID
+  })
+}
+
+function pickCharacterCarousel(board) {
+  board.props.moves.selectCharacter(board.state.carouselActiveCharacterID);
+  board.setState({
+    carouselActiveCharacterID: undefined
+  })
+}
+function CharacterCarousel(props) {
+  const board = props.board;
+  const G = board.props.G;
+  if (board.props.ctx.phase !== 'characterSelect') return null;
+  return <div>
+    <div style={{
+      display: 'flex',
+      flexWrap: 'wrap'
+    }}>{
+        G.roster.map(character => {
+          return <div key={character.ID}>
+            <img src={character.img} width='100' height='100' style={{
+              margin: '5px',
+              outline: (character.ID === board.state.carouselActiveCharacterID) ? 'green solid' : 'black solid'
+            }} onClick={(e) => selectCharacterCarousel(board, character.ID)}></img>
+          </div>
+        })}
+    </div>
+    <button onClick={(e) => pickCharacterCarousel(board)}>Pick this character</button>
+  </div>
 }
 
 function PlayerBoard(props) {
@@ -111,7 +156,7 @@ function renderTeam(board, teamID) {
     <p>Power: {Math.round(team.power)}</p>
     {team.characters.map((characterID) => {
       const character = G.characters[characterID];
-      return <div key={character.name}>
+      return <div key={characterID}>
         <div style={{
           display: 'flex',
           outline: (G.activeCharacterID === characterID ? 'solid' : 'none')
@@ -144,13 +189,17 @@ function renderTeam(board, teamID) {
 function isAvailableTargetCurrentSkill(board, target) {
   if (board.state.skillID === undefined) return false;
   const G = board.props.G;
-  const activeCharacter = G.characters[G.activeCharacterID];
+  const activeCharacter = activeCharacterBoard(board);
+  if (activeCharacter === undefined) return false;
   return isAvailableTarget(G, activeCharacter, target, activeCharacter.skills[board.state.skillID])
 }
 
 function renderSkills(board) {
   const G = board.props.G;
-  const activeCharacter = G.characters[G.activeCharacterID];
+  const activeCharacter = activeCharacterBoard(board);
+  if (activeCharacter === undefined) {
+    return null;
+  }
   let description;
   if (board.state.skillID === undefined) description = null;
   else {
@@ -171,5 +220,13 @@ function renderSkills(board) {
   </div>
 }
 
+function activeCharacterBoard(board) {
+  const G = board.props.G;
+  if (board.props.ctx.phase === 'characterSelect') {
+    if (board.state.carouselActiveCharacterID !== undefined) return G.roster[board.state.carouselActiveCharacterID];
+  } else {
+    return G.characters[G.activeCharacterID];
+  }
+}
 
 

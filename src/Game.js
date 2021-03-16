@@ -1,27 +1,75 @@
-import { INVALID_MOVE } from 'boardgame.io/core';
-import characters from './Characters';
-import skillFunctions from './SkillFunctions';
+import { INVALID_MOVE, TurnOrder } from 'boardgame.io/core';
 import { isAvailableTarget } from './SkillFunctions';
 import { removeCondition } from './Conditions';
+import CharacterData from './CharacterData';
+
+function useSkill(G, ctx, skillID, targetID) {
+  const caster = G.characters[G.activeCharacterID];
+  const skill = caster.skills[skillID];
+  if (skill === undefined) return INVALID_MOVE;
+  const currentTeamID = parseInt(ctx.currentPlayer);
+  const currentTeam = G.teams[currentTeamID];
+  const enemyTeamID = 1 - currentTeamID;
+  const enemyTeam = G.teams[enemyTeamID];
+  if (currentTeam.power < skill.cost) return INVALID_MOVE;
+  const targets = [];
+  if (skill.target === 'allenemy') {
+    enemyTeam.characters.forEach(characterID => {
+      let target = G.characters[targetID]
+      if (isAvailableTarget(G, caster, target, skill)) targets.push(target);
+    })
+  } else if (skill.target === 'allally') {
+    currentTeam.characters.forEach(characterID => {
+      let target = G.characters[targetID]
+      if (isAvailableTarget(G, caster, target, skill)) targets.push(target);
+    })
+  }
+  else {
+    let target = G.characters[targetID];
+    if (isAvailableTarget(G, caster, target, skill)) targets.push(target);
+  }
+  if (targets.length === 0) return INVALID_MOVE;
+  targets.forEach(target => {
+    skill.effects.forEach(effect => {
+      const skillFunction = CharacterData.functions.skill[effect.name];
+      skillFunction(G, caster, target, effect.params);
+    });
+  })
+  recalculateCurrentStats(G);
+  if (skill.cost !== 0) {
+    caster.current.boosts = 0;
+  } else {
+    caster.current.boosts++;
+  }
+  currentTeam.power -= skill.cost
+  goToNextCharacter(G, ctx);
+}
+
+function selectCharacter(G, ctx, rosterID) {
+  const character = Object.assign({}, G.roster[rosterID]);
+  character.current.ID = G.characters.length;
+  G.characters.push(character);
+  G.teams[parseInt(ctx.currentPlayer)].characters.push(character.current.ID);
+}
 
 export const Game = {
   name: 'Gensokyo-Battlegrounds',
   setup: () => {
     let G = {
-      characters: characters(),
+      roster: CharacterData.characters,
+      characters: [],
       conditions: [],
       teams: [{
         power: 0,
-        characters: [0, 1, 2]
+        characters: []
       },
       {
         power: 0,
-        characters: [3, 4, 5]
+        characters: []
       }],
       time: 0,
       activeCharacterID: undefined
     };
-    goToNextCharacter(G);
     return G;
   },
   turn: {
@@ -29,42 +77,26 @@ export const Game = {
       first: (G, ctx) => parseInt(nextActivePlayer(G))
     }
   },
-  moves: {
-    useSkill: (G, ctx, skillID, targetID) => {
-      const caster = G.characters[G.activeCharacterID];
-      const skill = caster.skills[skillID];
-      if (skill === undefined) return INVALID_MOVE;
-      const currentTeamID = parseInt(ctx.currentPlayer);
-      const currentTeam = G.teams[currentTeamID];
-      const enemyTeamID = 1 - currentTeamID;
-      const enemyTeam = G.teams[enemyTeamID];
-      if (currentTeam.power < skill.cost) return INVALID_MOVE;
-      const targets = [];
-      if (skill.target === 'allenemy') {
-        enemyTeam.characters.forEach(characterID => {
-          let target = G.characters[targetID]
-          if (isAvailableTarget(G, caster, target, skill)) targets.push(target);
-        })
-      } else {
-        let target = G.characters[targetID];
-        if (isAvailableTarget(G, caster, target, skill)) targets.push(target)
-        else return INVALID_MOVE;
+  phases: {
+    characterSelect: {
+      moves: { selectCharacter },
+      turn: {
+        order: TurnOrder.DEFAULT,
+        moveLimit: 1
+      },
+      start: true,
+      endIf: G => (G.teams[0].characters.length === 3 && G.teams[1].characters.length === 3),
+      next: 'battle',
+      onEnd: (G, ctx) => {
+        goToNextCharacter(G);
       }
-      targets.forEach(target => {
-        skill.effects.forEach(effect => {
-          const skillFunction = skillFunctions[effect.name];
-          skillFunction(G, caster, target, effect.params);
-        });
-      })
-      recalculateCurrentStats(G);
-      if (skill.cost !== 0) {
-        caster.current.boosts = 0;
-      } else {
-        caster.current.boosts++;
-      }
-      currentTeam.power -= skill.cost
-      goToNextCharacter(G, ctx);
+    },
+    battle: {
+      //this is default phase. No overrides.
     }
+  },
+  moves: {
+    useSkill
   },
   endIf: (G, ctx) => {
     const currentWinner = winner(G);
@@ -82,7 +114,9 @@ export const Game = {
 
 function goToNextCharacter(G, ctx) {
   if (G.activeCharacterID !== undefined) {
-    G.characters[G.activeCharacterID].current.progress = 0;
+    const activeCharacter = G.characters[G.activeCharacterID];
+    iterateEffects(activeCharacter.current.conditions, 'turnEnd', G);
+    activeCharacter.current.progress = 0;
     G.activeCharacterID = undefined;
   };
   //Iterate over all characters to find who will do next move and how much time it will take.
@@ -160,14 +194,7 @@ function recalculateCurrentStats(G) {
     character.current.status = {};
     character.current.active = character.current.alive;
   })
-  G.conditions.forEach(condition => {
-    if (condition === undefined || condition === null) return;
-    const character = G.characters[condition.characterID];
-    condition.effects.forEach(effect => {
-      if (effect.type !== 'statsCalculation') return;
-      skillFunctions[effect.name](G, character, condition, effect);
-    })
-  })
+  iterateEffects(G.conditions, 'statsCalculation', G);
 }
 
 function nextActivePlayer(G) {
@@ -175,6 +202,7 @@ function nextActivePlayer(G) {
 }
 
 function winner(G) {
+  if (G.teams[0].characters.length < 3 || G.teams[1].characters.length < 3) return undefined; //character select didn't yet end.
   let player1alive = false;
   G.teams[0].characters.forEach(characterID => {
     const character = G.characters[characterID];
@@ -189,5 +217,19 @@ function winner(G) {
   else if (player1alive && !player2alive) return 0
   else if (!player1alive && player2alive) return 1
   else return null //draw.
+}
+
+//This functions iterate all effects of an array of conditions and executes those that have a particular type
+export function iterateEffects(conditions, eventType, G, ...params) {
+  conditions.forEach(conditionID => {
+    const condition = (typeof (conditionID) === 'number') ? G.conditions[conditionID] : conditionID; //Expect conditionID to either be number (ID) or condition object itself.
+    if (condition === undefined || condition === null) return; //Array have undefined in expired conditions.
+    const character = G.characters[condition.characterID];
+    condition.effects.forEach(effect => {
+      if (effect.type !== eventType) return;
+      const effectFunction = CharacterData.functions[eventType][effect.name];
+      effectFunction(G, character, condition, effect, ...params);
+    })
+  })
 }
 
