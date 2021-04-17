@@ -67,6 +67,15 @@ descriptionGenerators.Erula__ApplyPoison = (character, skill, effect) => {
 descriptionGenerators.Erula__Cleanse = (character, skill, effect) => {
   return `removes most negative status effects from ${targetRender(skill)}`
 }
+descriptionGenerators.Utsuho__RecoilDamage = (character, condition, effect) => {
+  return `takes ${valueRender(character, effect)} damage`
+}
+descriptionGenerators.Utsuho__SelfTokamak = (character, condition, effect) => {
+  return `every second converts ${effect.params.percentDamage}% HP into power at ${effect.params.powerConversion}% effectiveness while doing same damage to every other character in play`
+}
+descriptionGenerators.Utsuho__AbyssNova = (character, condition, effect) => {
+  return `deals ${valueRender(character, effect)} damage to every enemy at the beginning of her next turn`
+}
 
 export class Board extends React.Component {
   constructor(props) {
