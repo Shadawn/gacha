@@ -56,8 +56,8 @@ function selectCharacter(G, ctx, rosterID) {
   G.teams[parseInt(ctx.currentPlayer)].characters.push(character.current.ID);
 }
 
-const teamSize = 1;
-const startingPower = 100;
+const teamSize = 3;
+const startingPower = 0;
 export const Game = {
   name: 'Gensokyo-Battlegrounds',
   setup: () => {
