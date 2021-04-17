@@ -1,81 +1,9 @@
 import React from 'react';
 import { skillDuration, skillValue, isAvailableTarget } from './SkillFunctions.js';
+import CharacterData from './CharacterData'
+import { valueRender, skillDurationRender, targetRender, changeRender } from './Descriptions.js';
 
-function valueRender(character, effect) {
-  return `${Math.round(skillValue(character, effect.params))} (${effect.params.scaling * 100}% of Atk${effect.params.boostscaling > 0 ? `, + ${effect.params.boostscaling * 100}% per boost` : ''})`
-}
-function skillDurationRender(character, effect) {
-  return effect.params.duration === undefined ? 'indefinitely' : `for ${Math.round(skillDuration(character, effect.params.duration, effect.params.boostscaling) * 10) / 10} seconds`;
-}
-function targetRender(skill, the = true) {
-  if (skill.target === 'allenemy') return 'all enemies';
-  else if (skill.target === 'allally') return 'all allies';
-  else return the ? 'the target' : 'target';
-}
-function changeRender(value) {
-  return value > 0 ? 'increases' : 'decreases';
-}
-const descriptionGenerators = {}
-descriptionGenerators.DamageTarget = (character, skill, effect) => {
-  return `deals ${valueRender(character, effect)} damage to ${targetRender(skill)}`
-}
-descriptionGenerators.ATBModifierTarget = (character, skill, effect) => {
-  return `changes ${targetRender(skill, false)}'s turn progress by ${effect.params.value / 10}%`
-}
-descriptionGenerators.ApplyDamageAbsorbingShieldTarget = (character, skill, effect) => {
-  return `grant target damage-absorbing shield for ${valueRender(character, effect)} hp ${skillDurationRender(character, effect)} `
-}
-descriptionGenerators.DamageTargetWithLifeSteal = (character, skill, effect) => {
-  return `deals ${valueRender(character, effect)} damage to the target and heals ${character.name} for ${effect.params.lifesteal * 100}% of damage dealt`;
-}
-descriptionGenerators.ApplyBasicCondition = (character, skill, effect) => {
-  return `${changeRender(effect.params.value)} ${targetRender(skill, false)}'s ${effect.params.attribute} by ${Math.abs(effect.params.value * 100)}% ${skillDurationRender(character, effect)}`
-}
-descriptionGenerators.Youmu__CloneDamage = (character, skill, effect) => {
-  return `deals extra ${valueRender(character, effect)} extra damage if Youmu has summoned "Wheel of Pain of the Living and Dead"`
-}
-descriptionGenerators.Youmu__CreateClone = (character, skill, effect) => {
-  return `summons spirit clone with ${valueRender(character, effect)} hp. While clone persists Transmigration Slash deals extra damage.`
-}
-descriptionGenerators.Youmu__ApplyDelayedDamage = (character, skill, effect) => {
-  return `after ${effect.params.delay} seconds deals ${valueRender(character, effect)} damage to the target (may change based on the current attack).`
-}
-descriptionGenerators.Youmu__DelayedDamage = (character, condition, effect) => {
-  return `${valueRender(character, effect)} damage`
-}
-descriptionGenerators.DamageAbsorbingShield = (character, condition, effect) => {
-  return `${Math.round(effect.params.value)} hp`
-}
-descriptionGenerators.GainPower = (character, skill, effect) => {
-  return `gain ${effect.params.value} power`
-}
-descriptionGenerators.ApplyLifesteal = (character, skill, effect) => {
-  return `grants ${targetRender(skill)} ${effect.params.value * 100}% lifesteal ${skillDurationRender(character, effect)}`
-}
-descriptionGenerators.ApplyStun = (character, skill, effect) => {
-  return `stuns ${targetRender(skill)} ${skillDurationRender(character, effect)}`
-}
-descriptionGenerators.ExecuteTarget = (character, skill, effect) => {
-  return `instantly kills ${targetRender(skill)} if it is below ${valueRender(character, effect)} hp`
-}
-descriptionGenerators.HealTarget = (character, skill, effect) => {
-  return `heals ${targetRender(skill)} for ${valueRender(character, effect)} hp`
-}
-descriptionGenerators.Erula__ApplyPoison = (character, skill, effect) => {
-  return `applies poison to ${targetRender(skill)} dealing 5% of it's health after each of it's turns`
-}
-descriptionGenerators.Erula__Cleanse = (character, skill, effect) => {
-  return `removes most negative status effects from ${targetRender(skill)}`
-}
-descriptionGenerators.Utsuho__RecoilDamage = (character, condition, effect) => {
-  return `takes ${valueRender(character, effect)} damage`
-}
-descriptionGenerators.Utsuho__SelfTokamak = (character, condition, effect) => {
-  return `every second converts ${effect.params.percentDamage}% HP into power at ${effect.params.powerConversion}% effectiveness while doing same damage to every other character in play`
-}
-descriptionGenerators.Utsuho__AbyssNova = (character, condition, effect) => {
-  return `deals ${valueRender(character, effect)} damage to every enemy at the beginning of her next turn`
-}
+const descriptionGenerators = CharacterData.descriptionGenerators;
 
 export class Board extends React.Component {
   constructor(props) {
@@ -234,7 +162,7 @@ function renderSkills(board) {
     }).join(' and ');
   }
   return <div>{activeCharacter.skills.map((skill, skillID) => {
-    return <button key={skill.name} onClick={(e) => selectSkill(board, skillID)} style={{
+    return <button key={skill.name} onClick={(e) => selectSkill(board, skillID)} disabled={!skill.current.active} style={{
       outline: (skillID === board.state.skillID ? 'solid' : 'none')
     }}>{skill.name + (skill.cost > 0 ? ` (${skill.cost} power)` : '')}</button>
   })

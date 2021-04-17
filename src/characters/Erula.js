@@ -1,6 +1,7 @@
 import { Data, newCharacter, newSkill, newSkillEffect, newDamageSkill, newSingleTargetDamageSkill, newBasicSingleTargetDamageSkill } from '../CharacterDataStructure'
 import * as SkillFunctions from '../SkillFunctions';
 import { newCondition, newEffect, addCondition, removeCondition } from '../Conditions';
+import { valueRender, skillDurationRender, targetRender, changeRender } from '../Descriptions';
 
 Data.characters.push(newCharacter('Erula', 'https://i.imgur.com/bc13Snt.jpeg', 10, 100, 90, [
   newBasicSingleTargetDamageSkill('Poisoned Needle', 0.5, [
@@ -42,4 +43,11 @@ Data.functions.skill.Erula__Cleanse = (G, caster, target, params) => {
     if (cleanseData.cleanse) removeCondition(G, condition);
   });
 
+}
+
+Data.descriptionGenerators.Erula__ApplyPoison = (character, skill, effect) => {
+  return `applies poison to ${targetRender(skill)} dealing 5% of it's health after each of it's turns`
+}
+Data.descriptionGenerators.Erula__Cleanse = (character, skill, effect) => {
+  return `removes most negative status effects from ${targetRender(skill)}`
 }

@@ -17,9 +17,10 @@ export function newCondition(name, duration, effects, data) {
 //'damageTaken'(G, character, condition, effect, eventParams) - executes just before character takes damage. eventParams has 1 property 'damage' that can be changed if damage changes via effect (like shield).
 //'damageDealt'(G, character, condition, effect, eventParams) - executes just after character deals damage to enemy. eventParams has 1 property 'damage' that's the same as in 'damageTaken'.
 //'conditionEnd'(G, character, condition, effect, eventParams)
+//'turnStart'(G, character, condition, effect) - executes immediately before character turn begins.
 //'turnEnd'(G, character, condition, effect) - executes immediately after character turn ends.
 //'custom' - does not execute,
-//'onTimer'(G, character, condition, effect) - executes on specified interval.   
+//'onTimer'(G, character, condition, effect) - executes on specified interval.
 export function newEffect(type, name, params) {
   return {
     type: type,
@@ -42,6 +43,7 @@ export function addCondition(G, character, condition) {
   condition.characterID = character.current.ID;
   for (const effect of condition.effects) {
     effect.params.time = G.time;
+    if (effect.params.executionOrder === undefined) effect.params.executionOrder = 0;
   }
   G.conditions.push(condition);
   character.current.conditions.push(condition.ID);

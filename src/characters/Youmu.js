@@ -1,6 +1,7 @@
 import { Data, newCharacter, newSkill, newSkillEffect, newDamageSkill, newSingleTargetDamageSkill, newBasicSingleTargetDamageSkill } from '../CharacterDataStructure'
 import { newCondition, newEffect, addCondition, removeCondition } from '../Conditions'
 import * as SkillFunctions from '../SkillFunctions'
+import { valueRender, skillDurationRender, targetRender, changeRender } from '../Descriptions';
 
 Data.characters.push(newCharacter('Youmu Konpaku', 'https://en.touhouwiki.net/images/thumb/8/8c/Th17Youmu.png/451px-Th17Youmu.png', 20, 90, 120, [
   newBasicSingleTargetDamageSkill('Transmigration Slash', 0.9, [
@@ -50,6 +51,19 @@ Data.functions.skill.Youmu__ApplyDelayedDamage = (G, caster, target, params) => 
     }),
   ])
   addCondition(G, caster, condition);
+}
+
+Data.descriptionGenerators.Youmu__CloneDamage = (character, skill, effect) => {
+  return `deals extra ${valueRender(character, effect)} extra damage if Youmu has summoned "Wheel of Pain of the Living and Dead"`
+}
+Data.descriptionGenerators.Youmu__CreateClone = (character, skill, effect) => {
+  return `summons spirit clone with ${valueRender(character, effect)} hp. While clone persists Transmigration Slash deals extra damage.`
+}
+Data.descriptionGenerators.Youmu__ApplyDelayedDamage = (character, skill, effect) => {
+  return `after ${effect.params.delay} seconds deals ${valueRender(character, effect)} damage to the target (may change based on the current attack).`
+}
+Data.descriptionGenerators.Youmu__DelayedDamage = (character, condition, effect) => {
+  return `${valueRender(character, effect)} damage`
 }
 
 Data.functions.conditionEnd.Youmu__DelayedDamage = (G, character, condition, effect, eventParams) => {

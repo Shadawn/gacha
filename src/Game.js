@@ -7,6 +7,7 @@ function useSkill(G, ctx, skillID, targetID) {
   const caster = G.characters[G.activeCharacterID];
   const skill = caster.skills[skillID];
   if (skill === undefined) return INVALID_MOVE;
+  if (!skill.current.active) return INVALID_MOVE;
   const currentTeamID = parseInt(ctx.currentPlayer);
   const currentTeam = G.teams[currentTeamID];
   const enemyTeamID = 1 - currentTeamID;
@@ -55,7 +56,8 @@ function selectCharacter(G, ctx, rosterID) {
   G.teams[parseInt(ctx.currentPlayer)].characters.push(character.current.ID);
 }
 
-const teamSize = 3;
+const teamSize = 1;
+const startingPower = 100;
 export const Game = {
   name: 'Gensokyo-Battlegrounds',
   setup: () => {
@@ -64,11 +66,11 @@ export const Game = {
       characters: [],
       conditions: [],
       teams: [{
-        power: 0,
+        power: startingPower,
         characters: []
       },
       {
-        power: 0,
+        power: startingPower,
         characters: []
       }],
       time: 0,
@@ -210,6 +212,7 @@ function recalculateCurrentStats(G) {
     character.current.speed = character.base.speed;
     character.current.status = {};
     character.current.active = character.current.alive;
+    character.skills.forEach(skill => skill.current.active = true);
   })
   iterateEffects(G.conditions, 'statsCalculation', G);
 }
@@ -238,15 +241,31 @@ function winner(G) {
 
 //This functions iterate all effects of an array of conditions and executes those that have a particular type
 export function iterateEffects(conditions, eventType, G, ...params) {
+  const effectData = [];
   conditions.forEach(conditionID => {
     const condition = (typeof (conditionID) === 'number') ? G.conditions[conditionID] : conditionID; //Expect conditionID to either be number (ID) or condition object itself.
     if (condition === undefined || condition === null) return; //Array have undefined in expired conditions.
-    const character = G.characters[condition.characterID];
+    let count = 0;
     condition.effects.forEach(effect => {
       if (effect.type !== eventType) return;
-      const effectFunction = CharacterData.functions[eventType][effect.name];
-      effectFunction(G, character, condition, effect, ...params);
+      effectData.push({
+        condition,
+        effect,
+        count
+      });
     })
+  })
+  effectData.sort((data1, data2) => {
+    if (data1.effect.params.executionOrder > data2.effect.params.executionOrder) return 1
+    else if (data1.effect.params.executionOrder < data2.effect.params.executionOrder) return -1
+    else if (data1.count > data2.count) return 1
+    else if (data1.count < data2.count) return -1
+    else return 0
+  })
+  effectData.forEach(data => {
+    const character = G.characters[data.condition.characterID];
+    const effectFunction = CharacterData.functions[eventType][data.effect.name];
+    effectFunction(G, character, data.condition, data.effect, ...params);
   })
 }
 

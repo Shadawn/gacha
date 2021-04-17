@@ -1,6 +1,7 @@
 import { Data, newCharacter, newSkill, newSkillEffect, newDamageSkill, newSingleTargetDamageSkill, newBasicSingleTargetDamageSkill } from '../CharacterDataStructure'
 import { newCondition, newEffect, addCondition, removeCondition } from '../Conditions'
 import * as SkillFunctions from '../SkillFunctions'
+import { valueRender, skillDurationRender, targetRender, changeRender } from '../Descriptions';
 
 Data.characters.push(newCharacter('Utsuho Reiuji', 'https://en.touhouwiki.net/images/2/28/Th123Utsuho.png', 25, 140, 80, [
   newBasicSingleTargetDamageSkill('Radiant Blade', 1.20, [
@@ -72,4 +73,14 @@ function Utsuho__CreateTokamak(G, character, params) {
     newEffect('onTimer', 'Utsuho__SelfTokamak', params),
   ]);
   addCondition(G, character, condition);
+}
+
+Data.descriptionGenerators.Utsuho__RecoilDamage = (character, condition, effect) => {
+  return `takes ${valueRender(character, effect)} damage`
+}
+Data.descriptionGenerators.Utsuho__SelfTokamak = (character, condition, effect) => {
+  return `every second converts ${effect.params.percentDamage}% HP into power at ${effect.params.powerConversion}% effectiveness while doing same damage to every other character in play`
+}
+Data.descriptionGenerators.Utsuho__AbyssNova = (character, condition, effect) => {
+  return `deals ${valueRender(character, effect)} damage to every enemy at the beginning of her next turn`
 }

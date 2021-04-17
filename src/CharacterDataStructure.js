@@ -64,7 +64,10 @@ export function newSkill(name, target, cost, effects = undefined) {
     name: name,
     target: target,
     cost: cost,
-    effects: actualEffects
+    effects: actualEffects,
+    current: {
+      active: true
+    }
   }
 }
 
