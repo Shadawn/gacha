@@ -127,11 +127,25 @@ function PlayerBoard(props) {
   const board = props.board;
   return <div>
     <p>Combat time: {Math.round(board.props.G.time * 100) / 100} s</p>
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
       <div>{renderTeam(board, 0)}</div>
+      {CombatLog(board.props.G.combatLog)}
       <div>{renderTeam(board, 1)}</div>
     </div>
     <div style={{ display: 'flex' }}>{/*(board.props.ctx.currentPlayer === props.playerID) ? renderSkills(board) : ''*/renderSkills(board)}</div>
+  </div>
+}
+
+function CombatLog(log) {
+  return <div>
+    <p>Combat log (last actions on top)</p>
+    <div style={{
+      maxHeight: '400px',
+      overflow: 'auto'
+    }}>
+
+      {log.map((logEntry, index, array) => <p>{array[array.length - 1 - index]}</p>)}
+    </div>
   </div>
 }
 
@@ -178,7 +192,7 @@ function renderTeam(board, teamID) {
                 return description !== undefined
               }).join(', ');
               return `${condition.name}${effectsDescription !== '' ? ' (' + effectsDescription + ')' : ''}`
-            }).join(' ,')}</p>
+            }).join(', ')}</p>
           </div>
         </div>
       </div>

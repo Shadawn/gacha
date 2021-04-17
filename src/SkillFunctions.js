@@ -15,6 +15,7 @@ export function skillDamageDefault(character, params) {
 }
 
 export function skillDuration(character, baseDuration, boostscaling) {
+  if (baseDuration === false) return false;
   return baseDuration * (1 + (boostscaling || 0) * character.current.boosts);
 }
 
@@ -70,7 +71,7 @@ export function death(G, character) {
   })
 }
 
-function teamID(G, character) {
+export function teamID(G, character) {
   if (G.teams[0].characters.indexOf(character.current.ID) !== -1) return 0
   else return 1;
 }
@@ -79,3 +80,6 @@ export function team(G, character) {
   return G.teams[teamID(G, character)];
 }
 
+export function enemyTeam(G, character) {
+  return G.teams[1 - teamID(G, character)];
+}

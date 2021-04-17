@@ -9,6 +9,6 @@ Data.characters.push(newCharacter('Marisa Kirisame', 'https://en.touhouwiki.net/
     boostscaling: 0.2,
     duration: 30
   })]),
-  newDamageSkill('Love Sign "Master Spark"', 'allenemy', 50, 0.8, 0.5)
+  newDamageSkill('Love Sign "Master Spark"', 'allenemy', 30, 0.8, 0.5)
 ]))
 

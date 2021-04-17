@@ -24,7 +24,9 @@ Data.functions.skill.Erula__ApplyPoison = (G, caster, target, params) => {
     newEffect('turnEnd', 'Erula__Poison', {
       cleanse: true
     }),
-  ])
+  ], {
+    unique: false
+  })
   addCondition(G, target, condition);
 }
 

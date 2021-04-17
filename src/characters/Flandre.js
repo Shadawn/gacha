@@ -18,6 +18,6 @@ Data.characters.push(newCharacter('Flandre Scarlet', 'https://en.touhouwiki.net/
     })]),
   newSingleTargetDamageSkill('Taboo "Laevatein"', 80, 3, 0.2, [
     newSkillEffect('GainPower', {
-      value: 60
+      value: 40
     })])
 ]))

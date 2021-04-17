@@ -42,6 +42,9 @@ function useSkill(G, ctx, skillID, targetID) {
     caster.current.boosts++;
   }
   currentTeam.power -= skill.cost
+  G.combatLog.push(`${caster.name} used ${skill.name} on ${targets.reduce((string, target) => {
+    return string === "" ? target.name : string + ", " + target.name
+  }, "")}`)
   goToNextCharacter(G, ctx);
 }
 
@@ -52,6 +55,7 @@ function selectCharacter(G, ctx, rosterID) {
   G.teams[parseInt(ctx.currentPlayer)].characters.push(character.current.ID);
 }
 
+const teamSize = 1;
 export const Game = {
   name: 'Gensokyo-Battlegrounds',
   setup: () => {
@@ -68,7 +72,8 @@ export const Game = {
         characters: []
       }],
       time: 0,
-      activeCharacterID: undefined
+      activeCharacterID: undefined,
+      combatLog: []
     };
     return G;
   },
@@ -85,7 +90,7 @@ export const Game = {
         moveLimit: 1
       },
       start: true,
-      endIf: G => (G.teams[0].characters.length === 3 && G.teams[1].characters.length === 3),
+      endIf: G => (G.teams[0].characters.length === teamSize && G.teams[1].characters.length === teamSize),
       next: 'battle',
       onEnd: (G, ctx) => {
         goToNextCharacter(G);
@@ -116,62 +121,74 @@ function goToNextCharacter(G, ctx) {
   if (G.activeCharacterID !== undefined) {
     const activeCharacter = G.characters[G.activeCharacterID];
     iterateEffects(activeCharacter.current.conditions, 'turnEnd', G);
-    activeCharacter.current.progress = 0;
+    activeCharacter.current.progress -= 1000;
     G.activeCharacterID = undefined;
   };
   //Iterate over all characters to find who will do next move and how much time it will take.
   let nextEventData = getNextEventData(G);
-  while (nextEventData.type === 'condition') {
+  while (nextEventData.type !== 'character') {
     forwardGameTime(G, nextEventData.time);
-    removeCondition(G, G.conditions[nextEventData.ID]);
+    if (nextEventData.type === 'condition') {
+      removeCondition(G, nextEventData.object);
+    }
+    else if (nextEventData.type === 'timedEffect') {
+      const effect = nextEventData.object.effect;
+      const skillFunction = CharacterData.functions.onTimer[effect.name];
+      skillFunction(G, nextEventData.object.character, nextEventData.object.condition, effect);
+      effect.params.time = effect.params.time + effect.params.interval;
+    } else {
+      throw "unknown EventData type"
+    }
     recalculateCurrentStats(G);
     nextEventData = getNextEventData(G);
   }
   forwardGameTime(G, nextEventData.time);
-  G.activeCharacterID = nextEventData.ID;
-  G.characters[G.activeCharacterID].progress = 1000;
+  G.activeCharacterID = nextEventData.object.current.ID;
+  const activeCharacter = G.characters[G.activeCharacterID];
+  activeCharacter.progress = 1000;
+  iterateEffects(activeCharacter.current.conditions, 'turnStart', G);
   if (ctx !== undefined) ctx.events.endTurn({ next: nextActivePlayer(G) });
 }
 
 function getNextEventData(G) {
-  const nextCharacterTurnData = G.characters.reduce((nextTurnData, character, index) => {
-    if (!character.current.active) return nextTurnData;
-    const timeUntilTurn = (1000 - character.current.progress) / character.current.speed;
-    if (nextTurnData.time <= timeUntilTurn) return nextTurnData;
-    return {
-      ID: index,
-      time: timeUntilTurn,
-    }
-  }, {
-    ID: undefined,
-    time: Number.POSITIVE_INFINITY
-  });
-  const nextConditionChangeData = G.conditions.reduce((nextConditionChangeData, condition, index) => {
-    if (condition === undefined || condition === null) return nextConditionChangeData;
-    if (condition.time === false) return nextConditionChangeData;
-    const timeUntilConditionChange = condition.time - G.time;
-    if (nextConditionChangeData.time <= timeUntilConditionChange) return nextConditionChangeData;
-    return {
-      ID: index,
-      time: timeUntilConditionChange
-    }
-  }, {
-    ID: undefined,
-    time: Number.POSITIVE_INFINITY
-  });
-  let eventType, eventData;
-  if (nextConditionChangeData.time <= nextCharacterTurnData.time) {
-    eventType = 'condition';
-    eventData = nextConditionChangeData
-  } else {
-    eventType = 'character';
-    eventData = nextCharacterTurnData
+  const nextEventData = {
+    type: undefined,
+    time: Number.POSITIVE_INFINITY,
+    object: undefined
   }
-  return {
-    type: eventType,
-    ID: eventData.ID,
-    time: eventData.time
+  for (const character of G.characters) {
+    if (!character.current.active) continue;
+    const time = (1000 - character.current.progress) / character.current.speed;
+    if (nextEventData.time <= time) continue;
+    nextEventData.time = time;
+    nextEventData.type = 'character';
+    nextEventData.object = character;
   }
+  for (const condition of G.conditions) {
+    if (condition === undefined || condition === null) continue;
+    if (condition.time === false) continue;
+    const time = condition.time - G.time;
+    if (nextEventData.time <= time) continue;
+    nextEventData.time = time;
+    nextEventData.type = 'condition';
+    nextEventData.object = condition;
+  }
+  for (const condition of G.conditions) {
+    if (condition === undefined || condition === null) continue;
+    for (const effect of condition.effects) {
+      if (effect.type !== 'onTimer') continue;
+      const time = effect.params.time - G.time;
+      if (nextEventData.time < time) continue;
+      nextEventData.time = time;
+      nextEventData.type = 'timedEffect';
+      nextEventData.object = {
+        "character": G.characters[condition.characterID],
+        "condition": condition,
+        "effect": effect
+      };
+    }
+  }
+  return nextEventData;
 }
 
 function forwardGameTime(G, time) {
@@ -202,7 +219,7 @@ function nextActivePlayer(G) {
 }
 
 function winner(G) {
-  if (G.teams[0].characters.length < 3 || G.teams[1].characters.length < 3) return undefined; //character select didn't yet end.
+  if (G.teams[0].characters.length < teamSize || G.teams[1].characters.length < teamSize) return undefined; //character select didn't yet end.
   let player1alive = false;
   G.teams[0].characters.forEach(characterID => {
     const character = G.characters[characterID];

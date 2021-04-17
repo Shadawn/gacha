@@ -6,6 +6,8 @@ import './characters/Remilia'
 import './characters/Flandre'
 import './characters/Sakuya'
 import './characters/Erula'
+import './characters/Patchouli'
+import './characters/Utsuho'
 import './skills/Basic'
 import './skills/BuffDebuffs'
 

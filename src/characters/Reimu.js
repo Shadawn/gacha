@@ -1,6 +1,6 @@
 import { Data, newCharacter, newSkill, newSkillEffect, newDamageSkill, newSingleTargetDamageSkill, newBasicSingleTargetDamageSkill } from '../CharacterDataStructure'
 
-Data.characters.push(newCharacter('Reimu Hakurei', 'https://en.touhouwiki.net/images/thumb/f/f7/Th175Reimu.png/355px-Th175Reimu.png', 15, 120, 100, [
+Data.characters.push(newCharacter('Reimu Hakurei', 'https://en.touhouwiki.net/images/thumb/f/f7/Th175Reimu.png/355px-Th175Reimu.png', 18, 120, 100, [
   newBasicSingleTargetDamageSkill('Hakurei Amulet', 0.8, [newSkillEffect('ATBModifierTarget', {
     value: -150
   })]),

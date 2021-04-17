@@ -6,7 +6,9 @@ export const Data = {
     damageTaken: {},
     damageDealt: {},
     conditionEnd: {},
-    turnEnd: {}
+    turnStart: {},
+    turnEnd: {},
+    onTimer: {}
   },
   descriptionGenerators: {}
 }
