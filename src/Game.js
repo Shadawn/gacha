@@ -15,12 +15,12 @@ function useSkill(G, ctx, skillID, targetID) {
   const targets = [];
   if (skill.target === 'allenemy') {
     enemyTeam.characters.forEach(characterID => {
-      let target = G.characters[targetID]
+      let target = G.characters[characterID]
       if (isAvailableTarget(G, caster, target, skill)) targets.push(target);
     })
   } else if (skill.target === 'allally') {
     currentTeam.characters.forEach(characterID => {
-      let target = G.characters[targetID]
+      let target = G.characters[characterID]
       if (isAvailableTarget(G, caster, target, skill)) targets.push(target);
     })
   }
