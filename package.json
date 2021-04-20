@@ -10,6 +10,7 @@
     "boardgame.io": "^0.43.2",
     "esm": "^3.2.25",
     "koa-static": "^5.0.0",
+    "mathjs": "^9.3.2",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-router-dom": "^5.2.0",

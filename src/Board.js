@@ -2,6 +2,7 @@ import React from 'react';
 import { skillDuration, skillValue, isAvailableTarget } from './SkillFunctions.js';
 import CharacterData from './CharacterData'
 import { valueRender, skillDurationRender, targetRender, changeRender } from './Descriptions.js';
+import { round } from 'mathjs';
 
 const descriptionGenerators = CharacterData.descriptionGenerators;
 
@@ -50,6 +51,8 @@ function CharacterCarousel(props) {
         G.roster.map(character => {
           return <div key={character.ID}>
             <img src={character.img} width='100' height='100' style={{
+              width: '100px',
+              height: '100px',
               margin: '5px',
               outline: (character.ID === board.state.carouselActiveCharacterID) ? 'green solid' : 'black solid'
             }} onClick={(e) => selectCharacterCarousel(board, character.ID)}></img>
@@ -63,7 +66,7 @@ function CharacterCarousel(props) {
 function PlayerBoard(props) {
   const board = props.board;
   return <div>
-    <p>Combat time: {Math.round(board.props.G.time * 100) / 100} s</p>
+    <p>Combat time: {round(board.props.G.time, 2)} s</p>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
       <div>{renderTeam(board, 0)}</div>
       {CombatLog(board.props.G.combatLog)}
@@ -107,16 +110,23 @@ function renderTeam(board, teamID) {
     <p>Power: {Math.round(team.power)}</p>
     {team.characters.map((characterID) => {
       const character = G.characters[characterID];
-      return <div key={characterID}>
+      return <div key={characterID} style={{
+        outline: (G.activeCharacterID === characterID ? 'solid' : 'none')
+      }}>
+        <p><strong>{character.name}</strong>: Attack {Math.round(character.current.attack)} Speed {Math.round(character.current.speed)} Boosts {character.current.boosts}</p>
         <div style={{
           display: 'flex',
-          outline: (G.activeCharacterID === characterID ? 'solid' : 'none')
         }}>
-          <img src={character.img} width='100' height='100' style={{
-            outline: (isAvailableTargetCurrentSkill(board, character) ? 'green solid' : 'none')
-          }} onClick={(e) => useSkill(board, characterID)}></img>
           <div>
-            <p>{character.name}: Attack {Math.round(character.current.attack)} HP {Math.round(character.current.health)}/{character.current.maxHealth} Speed {Math.round(character.current.speed)} Progress {Math.round(character.current.progress)} Boosts {character.current.boosts}</p>
+            <img src={character.img} style={{
+              width: '100px',
+              height: '100px',
+              outline: (isAvailableTargetCurrentSkill(board, character) ? 'green solid' : 'none')
+            }} onClick={(e) => useSkill(board, characterID)}></img>
+          </div>
+          <div style={{ width: '100%' }}>
+            <ProgressBar bgcolor='green' completed={character.current.health / character.current.maxHealth * 100} text={`HP ${Math.round(character.current.health)}/${character.current.maxHealth}`} />
+            <ProgressBar bgcolor='yellow' completed={character.current.progress / 10} text={`Progress ${Math.round(character.current.progress)} ${G.activeCharacterID === characterID ? '' : `(${round((1000 - character.current.progress) / character.current.speed, 1)}s until turn)`}`} />
             <p>Conditions: {character.current.conditions.map((conditionID) => {
               const condition = G.conditions[conditionID];
               const effectsDescriptionArray = condition.effects.map(effect => {
@@ -180,4 +190,39 @@ function activeCharacterBoard(board) {
   }
 }
 
+function ProgressBar(props) {
+  const { bgcolor, completed, text } = props;
+
+  const containerStyles = {
+    height: 25,
+    backgroundColor: "#e0e0de",
+    borderRadius: 10,
+    margin: 2,
+    position: 'relative',
+    textAlign: 'center',
+    zIndex: -2
+  }
+
+  const fillerStyles = {
+    height: '100%',
+    width: `${completed}%`,
+    backgroundColor: bgcolor,
+    transition: `width ${1}s ease-in-out`,
+    borderRadius: 'inherit',
+    position: 'absolute',
+    zIndex: '-1'
+  }
+
+  const labelStyles = {
+    fontWeight: 'bold',
+    //verticalAlign: 'middle'
+  }
+
+  return (
+    <div style={containerStyles}>
+      <div style={fillerStyles} />
+      <span style={labelStyles}>{text === undefined ? `${completed}%` : text}</span>
+    </div>
+  );
+};
 
